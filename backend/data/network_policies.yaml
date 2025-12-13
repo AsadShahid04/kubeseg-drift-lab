@@ -1,0 +1,35 @@
+- name: allow-frontend-to-api
+  namespace: prod
+  pod_selector:
+    app: api
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: frontend
+      ports:
+        - port: 443
+          protocol: TCP
+
+- name: allow-all-to-db
+  namespace: prod
+  pod_selector:
+    role: db
+  ingress:
+    - from_pod_selectors:
+        - match_labels: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+
+- name: allow-api-to-cache
+  namespace: prod
+  pod_selector:
+    app: cache
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: api
+      ports:
+        - port: 6379
+          protocol: TCP
+

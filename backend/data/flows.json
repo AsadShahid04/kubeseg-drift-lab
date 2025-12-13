@@ -1,0 +1,91 @@
+[
+  {
+    "src_ns": "non-prod",
+    "src_pod": "test-pod-1",
+    "src_labels": {"app": "test", "env": "dev"},
+    "dst_ns": "prod",
+    "dst_pod": "db-primary",
+    "dst_labels": {"role": "db", "env": "prod"},
+    "port": 5432,
+    "protocol": "TCP",
+    "verdict": "allow"
+  },
+  {
+    "src_ns": "prod",
+    "src_pod": "frontend-1",
+    "src_labels": {"app": "frontend", "env": "prod"},
+    "dst_ns": "prod",
+    "dst_pod": "api-1",
+    "dst_labels": {"app": "api", "env": "prod"},
+    "port": 443,
+    "protocol": "TCP",
+    "verdict": "allow"
+  },
+  {
+    "src_ns": "prod",
+    "src_pod": "api-1",
+    "src_labels": {"app": "api", "env": "prod"},
+    "dst_ns": "prod",
+    "dst_pod": "db-primary",
+    "dst_labels": {"role": "db", "env": "prod"},
+    "port": 5432,
+    "protocol": "TCP",
+    "verdict": "allow"
+  },
+  {
+    "src_ns": "prod",
+    "src_pod": "frontend-1",
+    "src_labels": {"app": "frontend", "env": "prod"},
+    "dst_ns": "prod",
+    "dst_pod": "api-1",
+    "dst_labels": {"app": "api", "env": "prod"},
+    "port": 80,
+    "protocol": "TCP",
+    "verdict": "allow"
+  },
+  {
+    "src_ns": "staging",
+    "src_pod": "monitoring-1",
+    "src_labels": {"app": "monitoring", "env": "staging"},
+    "dst_ns": "prod",
+    "dst_pod": "db-primary",
+    "dst_labels": {"role": "db", "env": "prod"},
+    "port": 5432,
+    "protocol": "TCP",
+    "verdict": "allow"
+  },
+  {
+    "src_ns": "prod",
+    "src_pod": "api-1",
+    "src_labels": {"app": "api", "env": "prod"},
+    "dst_ns": "prod",
+    "dst_pod": "cache-1",
+    "dst_labels": {"app": "cache", "env": "prod"},
+    "port": 6379,
+    "protocol": "TCP",
+    "verdict": "allow"
+  },
+  {
+    "src_ns": "prod",
+    "src_pod": "api-1",
+    "src_labels": {"app": "api", "env": "prod"},
+    "dst_ns": "prod",
+    "dst_pod": "db-primary",
+    "dst_labels": {"role": "db", "env": "prod"},
+    "port": 5432,
+    "protocol": "TCP",
+    "verdict": "deny"
+  },
+  {
+    "src_ns": "non-prod",
+    "src_pod": "dev-pod-1",
+    "src_labels": {"app": "dev-tool", "env": "dev"},
+    "dst_ns": "prod",
+    "dst_pod": "api-1",
+    "dst_labels": {"app": "api", "env": "prod"},
+    "port": 443,
+    "protocol": "TCP",
+    "verdict": "allow"
+  }
+]
+

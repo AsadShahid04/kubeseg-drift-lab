@@ -1,0 +1,30 @@
+- id: intent-1
+  src_selector:
+    app: frontend
+  dst_selector:
+    app: api
+  allowed_ports:
+    - port: 443
+      protocol: TCP
+  description: Frontend should only access API on HTTPS (443)
+
+- id: intent-2
+  src_selector:
+    app: api
+  dst_selector:
+    role: db
+  allowed_ports:
+    - port: 5432
+      protocol: TCP
+  description: API should only access database on PostgreSQL port
+
+- id: intent-3
+  src_selector:
+    app: api
+  dst_selector:
+    app: cache
+  allowed_ports:
+    - port: 6379
+      protocol: TCP
+  description: API should only access cache on Redis port
+
