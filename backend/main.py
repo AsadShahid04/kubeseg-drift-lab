@@ -225,3 +225,35 @@ async def get_drift():
         "per_namespace_summary": [item.model_dump() for item in summary]
     }
 
+
+@app.get("/api/flows")
+async def get_flows():
+    """Get flows data for network visualization."""
+    flows = load_flows()
+    policies = load_policies()
+    
+    # Calculate risk scores for flows
+    risky_flows = find_risky_flows(flows)
+    unprotected_flows = find_unprotected_flows(flows, policies)
+    
+    risky_flow_set = {f"{f.flow.src_ns}/{f.flow.src_pod}→{f.flow.dst_ns}/{f.flow.dst_pod}" for f in risky_flows}
+    unprotected_flow_set = {f"{f.flow.src_ns}/{f.flow.src_pod}→{f.flow.dst_ns}/{f.flow.dst_pod}" for f in unprotected_flows}
+    
+    # Add metadata to flows
+    enriched_flows = []
+    for flow in flows:
+        flow_key = f"{flow.src_ns}/{flow.src_pod}→{flow.dst_ns}/{flow.dst_pod}"
+        is_risky = flow_key in risky_flow_set
+        is_unprotected = flow_key in unprotected_flow_set
+        
+        enriched_flows.append({
+            **flow.model_dump(),
+            "is_risky": is_risky,
+            "is_unprotected": is_unprotected,
+            "risk_score": next((rf.risk_score for rf in risky_flows if rf.flow == flow), 0)
+        })
+    
+    return {
+        "flows": enriched_flows
+    }
+

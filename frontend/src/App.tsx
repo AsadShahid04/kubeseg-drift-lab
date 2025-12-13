@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import GapsView from './components/GapsView'
 import DriftView from './components/DriftView'
+import FlowVisualization from './components/FlowVisualization'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'gaps' | 'drift'>('gaps')
+  const [activeTab, setActiveTab] = useState<'gaps' | 'drift' | 'flows'>('flows')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,12 +40,22 @@ function App() {
             >
               Policy Drift
             </button>
+            <button
+              onClick={() => setActiveTab('flows')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'flows'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Flow Visualization
+            </button>
           </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'gaps' ? <GapsView /> : <DriftView />}
+        {activeTab === 'gaps' ? <GapsView /> : activeTab === 'drift' ? <DriftView /> : <FlowVisualization />}
       </main>
     </div>
   )
