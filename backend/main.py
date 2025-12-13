@@ -27,6 +27,7 @@ from analysis.drift import (
     find_over_permissive_policies,
     calculate_namespace_summary,
 )
+from ai.nl_intent import NLIntentConverter, intent_to_network_policy, policy_to_yaml
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -256,4 +257,92 @@ async def get_flows():
     return {
         "flows": enriched_flows
     }
+
+
+@app.post("/api/nl-intent")
+async def convert_nl_to_intent(request: dict):
+    """
+    Convert natural language policy description to NetworkPolicy.
+    
+    Request body:
+    {
+        "description": "natural language description",
+        "use_gpt4": false  # optional, defaults to gpt-3.5-turbo for cost
+    }
+    
+    Returns:
+    {
+        "intent": {...},
+        "policy_yaml": "...",
+        "explanation": "...",
+        "confidence": 0.9
+    }
+    """
+    try:
+        description = request.get("description", "")
+        use_gpt4 = request.get("use_gpt4", False)
+        
+        if not description:
+            return {"error": "Description is required"}
+        
+        # Get cluster context from existing data
+        flows = load_flows()
+        policies = load_policies()
+        
+        # Extract unique namespaces
+        namespaces = set()
+        common_labels = {}
+        label_counts = {}
+        
+        for flow in flows:
+            namespaces.add(flow.src_ns)
+            namespaces.add(flow.dst_ns)
+            
+            # Count label usage
+            for labels in [flow.src_labels, flow.dst_labels]:
+                for key, value in labels.items():
+                    label_key = f"{key}={value}"
+                    label_counts[label_key] = label_counts.get(label_key, 0) + 1
+        
+        # Get most common labels
+        sorted_labels = sorted(label_counts.items(), key=lambda x: x[1], reverse=True)
+        for label_str, count in sorted_labels[:20]:  # Top 20
+            key, value = label_str.split("=", 1)
+            if key not in common_labels:
+                common_labels[key] = []
+            if value not in common_labels[key]:
+                common_labels[key].append(value)
+        
+        cluster_context = {
+            "namespaces": sorted(list(namespaces)),
+            "common_labels": common_labels
+        }
+        
+        # Convert NL to intent
+        model = "gpt-4" if use_gpt4 else "gpt-3.5-turbo"
+        converter = NLIntentConverter(model=model)
+        result = converter.convert_to_intent(description, cluster_context)
+        
+        if result.get("error"):
+            return {"error": result["error"]}
+        
+        intent = result["intent"]
+        
+        # Convert intent to NetworkPolicy
+        policy = intent_to_network_policy(intent)
+        policy_yaml = policy_to_yaml(policy)
+        
+        # Add comment to YAML
+        policy_yaml = f"# Generated from natural language: {description}\n# {result['explanation']}\n\n{policy_yaml}"
+        
+        return {
+            "intent": intent,
+            "policy_yaml": policy_yaml,
+            "explanation": result["explanation"],
+            "confidence": result["confidence"],
+            "policy_name": policy.name,
+            "namespace": policy.namespace
+        }
+    except Exception as e:
+        return {"error": str(e)}
 

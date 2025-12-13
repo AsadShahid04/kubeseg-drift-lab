@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Network, Data } from 'vis-network'
+import { Network } from 'vis-network'
 import 'vis-network/styles/vis-network.min.css'
 import axios from 'axios'
 
@@ -379,7 +379,7 @@ export default function FlowVisualization() {
       }
     }
 
-    const data: Data = { nodes, edges }
+    const data = { nodes, edges }
 
     // Destroy existing network if it exists
     if (networkInstanceRef.current) {

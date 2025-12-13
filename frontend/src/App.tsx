@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import ErrorBoundary from './components/ErrorBoundary'
 import GapsView from './components/GapsView'
 import DriftView from './components/DriftView'
 import FlowVisualization from './components/FlowVisualization'
+import PolicySandbox from './components/PolicySandbox'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'gaps' | 'drift' | 'flows'>('flows')
+  const [activeTab, setActiveTab] = useState<'gaps' | 'drift' | 'flows' | 'sandbox'>('flows')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,12 +52,32 @@ function App() {
             >
               Flow Visualization
             </button>
+            <button
+              onClick={() => setActiveTab('sandbox')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'sandbox'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Policy Sandbox
+            </button>
           </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'gaps' ? <GapsView /> : activeTab === 'drift' ? <DriftView /> : <FlowVisualization />}
+        <ErrorBoundary>
+          {activeTab === 'gaps' ? (
+            <GapsView />
+          ) : activeTab === 'drift' ? (
+            <DriftView />
+          ) : activeTab === 'sandbox' ? (
+            <PolicySandbox />
+          ) : (
+            <FlowVisualization />
+          )}
+        </ErrorBoundary>
       </main>
     </div>
   )

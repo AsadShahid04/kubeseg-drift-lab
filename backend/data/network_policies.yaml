@@ -1,19 +1,81 @@
-- name: allow-frontend-to-api
+# Production Network Policies - Microsoft-like Enterprise Setup
+
+# API Gateway - Allow ingress from frontend services
+- name: allow-frontend-to-api-gateway
   namespace: prod
   pod_selector:
-    app: api
+    app: api-gateway
   ingress:
     - from_pod_selectors:
         - match_labels:
-            app: frontend
+            app: web-frontend
+            env: prod
+      ports:
+        - port: 443
+          protocol: TCP
+    - from_pod_selectors:
+        - match_labels:
+            app: mobile-api
+            env: prod
       ports:
         - port: 443
           protocol: TCP
 
-- name: allow-all-to-db
+# User Service - Allow ingress from API Gateway only
+- name: allow-api-gateway-to-user-service
   namespace: prod
   pod_selector:
-    role: db
+    app: user-service
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: api-gateway
+            env: prod
+      ports:
+        - port: 8080
+          protocol: TCP
+
+# Auth Service - Allow ingress from API Gateway only
+- name: allow-api-gateway-to-auth-service
+  namespace: prod
+  pod_selector:
+    app: auth-service
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: api-gateway
+            env: prod
+      ports:
+        - port: 8080
+          protocol: TCP
+
+# Payment Service - Allow ingress from API Gateway and Order Service
+- name: allow-to-payment-service
+  namespace: prod
+  pod_selector:
+    app: payment-service
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: api-gateway
+            env: prod
+      ports:
+        - port: 8080
+          protocol: TCP
+    - from_pod_selectors:
+        - match_labels:
+            app: order-service
+            env: prod
+      ports:
+        - port: 8080
+          protocol: TCP
+
+# PostgreSQL Primary - OVER-PERMISSIVE: Allows from any pod (should be restricted)
+- name: allow-all-to-postgres-primary
+  namespace: prod
+  pod_selector:
+    app: postgres
+    role: database
   ingress:
     - from_pod_selectors:
         - match_labels: {}
@@ -21,15 +83,138 @@
         - port: 5432
           protocol: TCP
 
-- name: allow-api-to-cache
+# PostgreSQL Replica - Allow read-only access from analytics services
+- name: allow-analytics-to-postgres-replica
   namespace: prod
   pod_selector:
-    app: cache
+    app: postgres
+    role: database-replica
   ingress:
     - from_pod_selectors:
         - match_labels:
-            app: api
+            team: analytics
+            env: prod
+      ports:
+        - port: 5432
+          protocol: TCP
+
+# MongoDB - Allow ingress from order and inventory services
+- name: allow-to-mongodb
+  namespace: prod
+  pod_selector:
+    app: mongodb
+    role: database
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: order-service
+            env: prod
+      ports:
+        - port: 27017
+          protocol: TCP
+    - from_pod_selectors:
+        - match_labels:
+            app: inventory-service
+            env: prod
+      ports:
+        - port: 27017
+          protocol: TCP
+
+# Redis Cache - Allow ingress from user service
+- name: allow-user-service-to-redis-cache
+  namespace: prod
+  pod_selector:
+    app: redis
+    role: cache
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: user-service
+            env: prod
       ports:
         - port: 6379
           protocol: TCP
 
+# Redis Session Store - Allow ingress from auth service
+- name: allow-auth-service-to-redis-session
+  namespace: prod
+  pod_selector:
+    app: redis
+    role: session-store
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: auth-service
+            env: prod
+      ports:
+        - port: 6379
+          protocol: TCP
+
+# Kafka - Allow ingress from order and notification services
+- name: allow-to-kafka
+  namespace: prod
+  pod_selector:
+    app: kafka
+    role: message-queue
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: order-service
+            env: prod
+      ports:
+        - port: 9092
+          protocol: TCP
+    - from_pod_selectors:
+        - match_labels:
+            app: notification-service
+            env: prod
+      ports:
+        - port: 9092
+          protocol: TCP
+
+# Email Service - Allow ingress from notification service
+- name: allow-notification-to-email
+  namespace: prod
+  pod_selector:
+    app: email-service
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: notification-service
+            env: prod
+      ports:
+        - port: 587
+          protocol: TCP
+
+# Monitoring - Allow Prometheus to scrape metrics from prod services
+- name: allow-prometheus-scraping
+  namespace: prod
+  pod_selector:
+    tier: backend
+  ingress:
+    - from_ns_selectors:
+        - match_labels:
+            name: monitoring
+      ports:
+        - port: 9090
+          protocol: TCP
+
+# Security - Allow Vault access from auth service
+- name: allow-auth-to-vault
+  namespace: security
+  pod_selector:
+    app: vault
+  ingress:
+    - from_pod_selectors:
+        - match_labels:
+            app: auth-service
+            env: prod
+      ports:
+        - port: 8200
+          protocol: TCP
+
+# MISSING POLICY: Order Service should have ingress policy but doesn't
+# MISSING POLICY: Inventory Service should have ingress policy but doesn't
+# MISSING POLICY: Notification Service should have ingress policy but doesn't
+# MISSING POLICY: Analytics Service should have ingress policy but doesn't
+# MISSING POLICY: Reporting Service should have ingress policy but doesn't

@@ -1,30 +1,277 @@
-- id: intent-1
+# Intent Rules - Microsoft-like Enterprise Security Policies
+# These represent the "desired state" of network segmentation
+
+# Frontend to API Gateway - HTTPS only
+- id: intent-frontend-to-api-gateway
   src_selector:
-    app: frontend
+    app: web-frontend
+    env: prod
   dst_selector:
-    app: api
+    app: api-gateway
+    env: prod
   allowed_ports:
     - port: 443
       protocol: TCP
-  description: Frontend should only access API on HTTPS (443)
+  description: Web frontend should only access API Gateway via HTTPS (443), not HTTP (80)
 
-- id: intent-2
+# Mobile API to API Gateway - HTTPS only
+- id: intent-mobile-to-api-gateway
   src_selector:
-    app: api
+    app: mobile-api
+    env: prod
   dst_selector:
-    role: db
+    app: api-gateway
+    env: prod
+  allowed_ports:
+    - port: 443
+      protocol: TCP
+  description: Mobile API should only access API Gateway via HTTPS
+
+# API Gateway to Backend Services - Standard service port
+- id: intent-api-gateway-to-user-service
+  src_selector:
+    app: api-gateway
+    env: prod
+  dst_selector:
+    app: user-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: API Gateway should access User Service on standard service port
+
+- id: intent-api-gateway-to-auth-service
+  src_selector:
+    app: api-gateway
+    env: prod
+  dst_selector:
+    app: auth-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: API Gateway should access Auth Service on standard service port
+
+- id: intent-api-gateway-to-payment-service
+  src_selector:
+    app: api-gateway
+    env: prod
+  dst_selector:
+    app: payment-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: API Gateway should access Payment Service on standard service port
+
+- id: intent-api-gateway-to-order-service
+  src_selector:
+    app: api-gateway
+    env: prod
+  dst_selector:
+    app: order-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: API Gateway should access Order Service on standard service port
+
+- id: intent-api-gateway-to-inventory-service
+  src_selector:
+    app: api-gateway
+    env: prod
+  dst_selector:
+    app: inventory-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: API Gateway should access Inventory Service on standard service port
+
+# Backend Services to Databases - Database-specific ports only
+- id: intent-services-to-postgres
+  src_selector:
+    tier: backend
+    env: prod
+  dst_selector:
+    app: postgres
+    role: database
+    env: prod
   allowed_ports:
     - port: 5432
       protocol: TCP
-  description: API should only access database on PostgreSQL port
+  description: Backend services should only access PostgreSQL primary on port 5432
 
-- id: intent-3
+- id: intent-services-to-mongodb
   src_selector:
-    app: api
+    tier: backend
+    env: prod
   dst_selector:
-    app: cache
+    app: mongodb
+    role: database
+    env: prod
+  allowed_ports:
+    - port: 27017
+      protocol: TCP
+  description: Backend services should only access MongoDB on port 27017
+
+- id: intent-user-service-to-redis-cache
+  src_selector:
+    app: user-service
+    env: prod
+  dst_selector:
+    app: redis
+    role: cache
+    env: prod
   allowed_ports:
     - port: 6379
       protocol: TCP
-  description: API should only access cache on Redis port
+  description: User Service should only access Redis cache on port 6379
 
+- id: intent-auth-service-to-redis-session
+  src_selector:
+    app: auth-service
+    env: prod
+  dst_selector:
+    app: redis
+    role: session-store
+    env: prod
+  allowed_ports:
+    - port: 6379
+      protocol: TCP
+  description: Auth Service should only access Redis session store on port 6379
+
+# Inter-service Communication
+- id: intent-order-to-payment
+  src_selector:
+    app: order-service
+    env: prod
+  dst_selector:
+    app: payment-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: Order Service should access Payment Service on standard service port
+
+- id: intent-order-to-inventory
+  src_selector:
+    app: order-service
+    env: prod
+  dst_selector:
+    app: inventory-service
+    env: prod
+  allowed_ports:
+    - port: 8080
+      protocol: TCP
+  description: Order Service should access Inventory Service on standard service port
+
+# Messaging
+- id: intent-services-to-kafka
+  src_selector:
+    tier: backend
+    env: prod
+  dst_selector:
+    app: kafka
+    role: message-queue
+    env: prod
+  allowed_ports:
+    - port: 9092
+      protocol: TCP
+  description: Backend services should access Kafka on port 9092
+
+- id: intent-notification-to-email
+  src_selector:
+    app: notification-service
+    env: prod
+  dst_selector:
+    app: email-service
+    env: prod
+  allowed_ports:
+    - port: 587
+      protocol: TCP
+  description: Notification Service should access Email Service on SMTP port 587
+
+# Analytics to Database Replica - Read-only access
+- id: intent-analytics-to-postgres-replica
+  src_selector:
+    team: analytics
+    env: prod
+  dst_selector:
+    app: postgres
+    role: database-replica
+    env: prod
+  allowed_ports:
+    - port: 5432
+      protocol: TCP
+  description: Analytics services should only access PostgreSQL replica (read-only) on port 5432
+
+# Monitoring - Prometheus scraping
+- id: intent-prometheus-scraping
+  src_selector:
+    app: prometheus
+    env: shared
+  dst_selector:
+    tier: backend
+    env: prod
+  allowed_ports:
+    - port: 9090
+      protocol: TCP
+  description: Prometheus should scrape metrics from backend services on port 9090
+
+- id: intent-prometheus-to-postgres-exporter
+  src_selector:
+    app: prometheus
+    env: shared
+  dst_selector:
+    app: postgres
+    role: database
+    env: prod
+  allowed_ports:
+    - port: 9187
+      protocol: TCP
+  description: Prometheus should scrape PostgreSQL metrics exporter on port 9187
+
+# Security - Vault access
+- id: intent-auth-to-vault
+  src_selector:
+    app: auth-service
+    env: prod
+  dst_selector:
+    app: vault
+    env: shared
+  allowed_ports:
+    - port: 8200
+      protocol: TCP
+  description: Auth Service should access Vault for secrets on port 8200
+
+# Database Replication
+- id: intent-postgres-replication
+  src_selector:
+    app: postgres
+    role: database-replica
+    env: prod
+  dst_selector:
+    app: postgres
+    role: database
+    env: prod
+  allowed_ports:
+    - port: 5432
+      protocol: TCP
+  description: PostgreSQL replica should replicate from primary on port 5432
+
+# Logging - Elasticsearch
+- id: intent-services-to-elasticsearch
+  src_selector:
+    tier: backend
+    env: prod
+  dst_selector:
+    app: elasticsearch
+    env: shared
+  allowed_ports:
+    - port: 9200
+      protocol: TCP
+  description: Backend services should send logs to Elasticsearch on port 9200
+
+# RESTRICTIVE INTENT: No cross-environment access to production databases
+# This intent is intentionally missing to demonstrate drift - dev/staging should NOT access prod DBs
