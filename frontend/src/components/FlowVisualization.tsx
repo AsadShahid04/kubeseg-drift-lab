@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Network, Data, Node, Edge } from 'vis-network'
-import 'vis-network/dist/vis-network.min.css'
+import { Network, Data } from 'vis-network'
+import 'vis-network/styles/vis-network.min.css'
 import axios from 'axios'
 
 interface Flow {
