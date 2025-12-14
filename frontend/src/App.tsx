@@ -3,13 +3,12 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import GapsView from "./components/GapsView";
 import DriftView from "./components/DriftView";
 import FlowVisualization from "./components/FlowVisualization";
-import GuidedScenarios from "./components/GuidedScenarios";
 import WelcomeView from "./components/WelcomeView";
 import CaseStudies from "./components/CaseStudies";
 
 function App() {
   const [activeTab, setActiveTab] = useState<
-    "welcome" | "gaps" | "drift" | "flows" | "scenarios" | "case-studies"
+    "welcome" | "gaps" | "drift" | "flows" | "case-studies"
   >("welcome");
 
   return (
@@ -67,16 +66,6 @@ function App() {
               Flow Visualization
             </button>
             <button
-              onClick={() => setActiveTab("scenarios")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "scenarios"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              Guided Scenarios
-            </button>
-            <button
               onClick={() => setActiveTab("case-studies")}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "case-studies"
@@ -100,10 +89,6 @@ function App() {
             <GapsView />
           ) : activeTab === "drift" ? (
             <DriftView />
-          ) : activeTab === "scenarios" ? (
-            <GuidedScenarios
-              onNavigate={(tab) => setActiveTab(tab as typeof activeTab)}
-            />
           ) : activeTab === "case-studies" ? (
             <CaseStudies />
           ) : (

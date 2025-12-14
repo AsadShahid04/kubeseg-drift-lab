@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
+import LoadingToast from "./LoadingToast";
 
 interface NamespaceBrief {
   namespace: string;
@@ -37,6 +38,7 @@ export default function DriftView() {
     null
   );
   const [loadingBrief, setLoadingBrief] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,17 +51,30 @@ export default function DriftView() {
         console.error(err);
       } finally {
         setLoading(false);
+        setShowToast(false);
       }
     };
 
     fetchData();
+
+    // Show toast after 3 seconds to explain potential delay
+    const toastTimer = setTimeout(() => {
+      setShowToast(true);
+    }, 3000);
+
+    return () => {
+      clearTimeout(toastTimer);
+    };
   }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
+      <>
+        <div className="flex justify-center items-center py-12">
+          <div className="text-gray-600">Loading...</div>
+        </div>
+        <LoadingToast show={showToast} onClose={() => setShowToast(false)} />
+      </>
     );
   }
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Network } from "vis-network";
 import "vis-network/styles/vis-network.min.css";
 import apiClient from "../api/client";
+import LoadingToast from "./LoadingToast";
 
 interface Flow {
   src_ns: string;
@@ -42,6 +43,7 @@ export default function FlowVisualization() {
   const [selectedEdgeData, setSelectedEdgeDataState] = useState<any>(null);
   const [allFlows, setAllFlows] = useState<Flow[]>([]);
   const [namespaces, setNamespaces] = useState<string[]>([]);
+  const [showToast, setShowToast] = useState(false);
 
   // Store data maps for quick access
   const nodeDataMapRef = useRef<Map<string, any>>(new Map());
@@ -501,10 +503,20 @@ export default function FlowVisualization() {
         console.error(err);
       } finally {
         setLoading(false);
+        setShowToast(false);
       }
     };
 
     fetchData();
+
+    // Show toast after 3 seconds to explain potential delay
+    const toastTimer = setTimeout(() => {
+      setShowToast(true);
+    }, 3000);
+
+    return () => {
+      clearTimeout(toastTimer);
+    };
   }, []);
 
   // Rebuild network when filters or data change
@@ -542,9 +554,12 @@ export default function FlowVisualization() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="text-gray-600">Loading network visualization...</div>
-      </div>
+      <>
+        <div className="flex justify-center items-center py-12">
+          <div className="text-gray-600">Loading network visualization...</div>
+        </div>
+        <LoadingToast show={showToast} onClose={() => setShowToast(false)} />
+      </>
     );
   }
 

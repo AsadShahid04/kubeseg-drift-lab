@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
 import YamlBlock from "./YamlBlock";
+import LoadingToast from "./LoadingToast";
 
 interface PRSnippet {
   file_path: string;
@@ -65,6 +66,7 @@ export default function GapsView() {
   const [expandedPolicies, setExpandedPolicies] = useState<Set<number>>(
     new Set()
   );
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,17 +79,30 @@ export default function GapsView() {
         console.error(err);
       } finally {
         setLoading(false);
+        setShowToast(false);
       }
     };
 
     fetchData();
+
+    // Show toast after 3 seconds to explain potential delay
+    const toastTimer = setTimeout(() => {
+      setShowToast(true);
+    }, 3000);
+
+    return () => {
+      clearTimeout(toastTimer);
+    };
   }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
+      <>
+        <div className="flex justify-center items-center py-12">
+          <div className="text-gray-600">Loading...</div>
+        </div>
+        <LoadingToast show={showToast} onClose={() => setShowToast(false)} />
+      </>
     );
   }
 

@@ -152,15 +152,6 @@ export default function WelcomeView({ onNavigate }: WelcomeViewProps) {
                 analysis.
               </p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Guided Scenarios
-              </h3>
-              <p className="text-sm text-gray-700">
-                Step-by-step tutorials demonstrating common security scenarios
-                and best practices for Kubernetes network segmentation.
-              </p>
-            </div>
           </div>
         </section>
 
@@ -769,17 +760,6 @@ export default function WelcomeView({ onNavigate }: WelcomeViewProps) {
                       <div>• Compliance View</div>
                     </div>
                   </div>
-                  <div className="bg-white rounded p-4 border border-gray-300">
-                    <div className="text-sm font-semibold text-gray-700 mb-2">
-                      Guided Scenarios
-                    </div>
-                    <div className="text-xs text-gray-600 space-y-1">
-                      <div>• Tutorial Mode</div>
-                      <div>• Best Practices</div>
-                      <div>• Lessons Learned</div>
-                      <div>• Step-by-Step</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1179,8 +1159,7 @@ kubectl apply -f k8s/service.yaml`}</pre>
           </h2>
           <p className="mb-6 text-blue-100 text-lg">
             Navigate through the tabs above to explore gap analysis, policy
-            drift detection, flow visualization, guided scenarios, and
-            real-world case studies.
+            drift detection, flow visualization, and real-world case studies.
           </p>
           <div className="flex justify-center space-x-4 flex-wrap gap-3">
             <button

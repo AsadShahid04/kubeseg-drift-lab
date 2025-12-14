@@ -460,17 +460,6 @@ export default function CaseStudies() {
           quantitative ROI calculations, compliance implications, and technical
           deep dives, refer to the complete case study document.
         </p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              // Scroll to top or show executive summary modal
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 font-medium text-sm transition"
-          >
-            View Executive Summary
-          </button>
-        </div>
       </section>
     </div>
   );
