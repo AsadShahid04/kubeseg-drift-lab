@@ -5,6 +5,7 @@ import DriftView from "./components/DriftView";
 import FlowVisualization from "./components/FlowVisualization";
 import WelcomeView from "./components/WelcomeView";
 import CaseStudies from "./components/CaseStudies";
+import Footer from "./components/Footer";
 
 function App() {
   const [activeTab, setActiveTab] = useState<
@@ -12,7 +13,7 @@ function App() {
   >("welcome");
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <h1 className="text-2xl font-bold text-gray-900">kubeseg-gaps</h1>
@@ -79,7 +80,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         <ErrorBoundary>
           {activeTab === "welcome" ? (
             <WelcomeView
@@ -96,6 +97,7 @@ function App() {
           )}
         </ErrorBoundary>
       </main>
+      <Footer />
     </div>
   );
 }

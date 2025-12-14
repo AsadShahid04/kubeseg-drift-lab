@@ -37,8 +37,15 @@ export default function WelcomeView({ onNavigate }: WelcomeViewProps) {
             <div className="space-y-4 text-gray-700 mb-6">
               <p className="text-lg leading-relaxed">
                 Hello! I'm{" "}
-                <strong className="text-gray-900">Asad Shahid</strong>, and I'm
-                excited to share this application with you.
+                <a
+                  href="http://linkedin.com/in/asadshahid04"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 font-semibold underline"
+                >
+                  Asad Shahid
+                </a>
+                , and I'm excited to share this application with you.
               </p>
               <p className="leading-relaxed">
                 I'm learning more about{" "}
@@ -89,7 +96,17 @@ export default function WelcomeView({ onNavigate }: WelcomeViewProps) {
             security
           </p>
           <div className="flex items-center text-sm text-gray-500 space-x-4 mt-4">
-            <span>Author: Asad Shahid</span>
+            <span>
+              Author:{" "}
+              <a
+                href="http://linkedin.com/in/asadshahid04"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Asad Shahid
+              </a>
+            </span>
             <span>•</span>
             <span>Kubernetes, Network Security, Zero Trust, Calico</span>
           </div>
@@ -1186,8 +1203,16 @@ kubectl apply -f k8s/service.yaml`}</pre>
         {/* Footer */}
         <div className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
           <p>
-            Document prepared by Asad Shahid | kubeseg-drift-lab Integration
-            Architecture
+            Document prepared by{" "}
+            <a
+              href="http://linkedin.com/in/asadshahid04"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Asad Shahid
+            </a>{" "}
+            | kubeseg-drift-lab Integration Architecture
           </p>
         </div>
       </div>
