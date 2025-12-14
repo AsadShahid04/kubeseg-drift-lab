@@ -1,12 +1,16 @@
-import { useState } from 'react'
-import ErrorBoundary from './components/ErrorBoundary'
-import GapsView from './components/GapsView'
-import DriftView from './components/DriftView'
-import FlowVisualization from './components/FlowVisualization'
-import PolicySandbox from './components/PolicySandbox'
+import { useState } from "react";
+import ErrorBoundary from "./components/ErrorBoundary";
+import GapsView from "./components/GapsView";
+import DriftView from "./components/DriftView";
+import FlowVisualization from "./components/FlowVisualization";
+import GuidedScenarios from "./components/GuidedScenarios";
+import WelcomeView from "./components/WelcomeView";
+import CaseStudies from "./components/CaseStudies";
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'gaps' | 'drift' | 'flows' | 'sandbox'>('flows')
+  const [activeTab, setActiveTab] = useState<
+    "welcome" | "gaps" | "drift" | "flows" | "scenarios" | "case-studies"
+  >("welcome");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -23,44 +27,64 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             <button
-              onClick={() => setActiveTab('gaps')}
+              onClick={() => setActiveTab("welcome")}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'gaps'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "welcome"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Introduction
+            </button>
+            <button
+              onClick={() => setActiveTab("gaps")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "gaps"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Gaps & Suggestions
             </button>
             <button
-              onClick={() => setActiveTab('drift')}
+              onClick={() => setActiveTab("drift")}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'drift'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "drift"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Policy Drift
             </button>
             <button
-              onClick={() => setActiveTab('flows')}
+              onClick={() => setActiveTab("flows")}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'flows'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "flows"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Flow Visualization
             </button>
             <button
-              onClick={() => setActiveTab('sandbox')}
+              onClick={() => setActiveTab("scenarios")}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'sandbox'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "scenarios"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Policy Sandbox
+              Guided Scenarios
+            </button>
+            <button
+              onClick={() => setActiveTab("case-studies")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "case-studies"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Case Studies
             </button>
           </div>
         </div>
@@ -68,19 +92,23 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorBoundary>
-          {activeTab === 'gaps' ? (
+          {activeTab === "welcome" ? (
+            <WelcomeView onNavigate={setActiveTab} />
+          ) : activeTab === "gaps" ? (
             <GapsView />
-          ) : activeTab === 'drift' ? (
+          ) : activeTab === "drift" ? (
             <DriftView />
-          ) : activeTab === 'sandbox' ? (
-            <PolicySandbox />
+          ) : activeTab === "scenarios" ? (
+            <GuidedScenarios onNavigate={setActiveTab} />
+          ) : activeTab === "case-studies" ? (
+            <CaseStudies />
           ) : (
             <FlowVisualization />
           )}
         </ErrorBoundary>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

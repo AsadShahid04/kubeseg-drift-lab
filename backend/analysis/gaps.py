@@ -16,6 +16,8 @@ class RiskyFlow(BaseModel):
     flow: Flow
     risk_score: int
     reason: str
+    risk_level: str = "medium"  # low, medium, high, critical
+    summary: str = ""  # AI-generated summary
 
 
 class SuggestedPolicy(BaseModel):
@@ -109,46 +111,106 @@ def find_unprotected_flows(flows: List[Flow], policies: List[NetworkPolicy]) -> 
 
 def find_risky_flows(flows: List[Flow]) -> List[RiskyFlow]:
     """
-    Identify flows that represent security risks.
+    Identify flows that represent security risks with comprehensive scoring.
     
-    A flow is risky if:
-    - Cross-namespace (src_ns != dst_ns) AND
-    - Destination has sensitive labels (role=db OR env=prod)
+    Risk factors:
+    - Cross-namespace traffic (higher risk)
+    - Production environment access
+    - Database access
+    - Sensitive ports (22, 3306, 5432, 6379, 27017, etc.)
+    - Privileged service access
+    - Unprotected flows
     """
     risky = []
+    
+    # Sensitive ports that indicate higher risk
+    sensitive_ports = {
+        22: 4,      # SSH
+        3306: 5,    # MySQL
+        5432: 5,    # PostgreSQL
+        6379: 4,    # Redis
+        27017: 4,   # MongoDB
+        1433: 5,    # SQL Server
+        1521: 5,    # Oracle
+        5984: 3,    # CouchDB
+        9200: 4,    # Elasticsearch
+        8080: 2,    # Common app port
+        8443: 3,    # HTTPS alternative
+    }
     
     for flow in flows:
         if flow.verdict != "allow":
             continue  # Only analyze allowed flows
         
-        risk_score = 5  # Base risk score
+        risk_score = 0
         reasons = []
+        risk_factors = []
+        
+        # Base risk for any allowed flow
+        risk_score += 1
         
         # Check for cross-namespace
         is_cross_namespace = flow.src_ns != flow.dst_ns
         if is_cross_namespace:
-            risk_score += 2
+            risk_score += 4
             reasons.append("cross-namespace traffic")
+            risk_factors.append("CrossNamespace")
         
         # Check for sensitive destination labels
-        is_prod = flow.dst_labels.get("env") == "prod"
-        is_db = flow.dst_labels.get("role") == "db"
+        is_prod = flow.dst_labels.get("env") == "prod" or "prod" in flow.dst_ns.lower()
+        is_db = flow.dst_labels.get("role") == "db" or "db" in flow.dst_labels.get("app", "").lower()
+        is_sensitive = flow.dst_labels.get("tier") == "backend" or "api" in flow.dst_labels.get("app", "").lower()
         
         if is_prod:
-            risk_score += 3
-            reasons.append("destination in prod environment")
+            risk_score += 5
+            reasons.append("production environment")
+            risk_factors.append("Production")
         
         if is_db:
-            risk_score += 3
-            reasons.append("destination is database")
+            risk_score += 6
+            reasons.append("database access")
+            risk_factors.append("Database")
         
-        # Only mark as risky if it meets criteria
-        if is_cross_namespace and (is_prod or is_db):
+        if is_sensitive:
+            risk_score += 2
+            reasons.append("sensitive service")
+            risk_factors.append("SensitiveService")
+        
+        # Check for sensitive ports
+        port_risk = sensitive_ports.get(flow.port, 0)
+        if port_risk > 0:
+            risk_score += port_risk
+            reasons.append(f"sensitive port {flow.port}")
+            risk_factors.append(f"SensitivePort:{flow.port}")
+        
+        # Check source environment (dev/staging accessing prod is higher risk)
+        src_is_dev = "dev" in flow.src_ns.lower() or flow.src_labels.get("env") == "dev"
+        src_is_staging = "staging" in flow.src_ns.lower() or flow.src_labels.get("env") == "staging"
+        
+        if (src_is_dev or src_is_staging) and is_prod:
+            risk_score += 3
+            reasons.append("non-prod to prod access")
+            risk_factors.append("NonProdToProd")
+        
+        # Check for privileged service labels
+        if "admin" in flow.dst_labels.get("app", "").lower() or "root" in flow.dst_labels.get("app", "").lower():
+            risk_score += 3
+            reasons.append("privileged service")
+            risk_factors.append("PrivilegedService")
+        
+        # Only mark as risky if score exceeds threshold
+        if risk_score >= 5:
+            # Normalize score to 1-100 scale
+            normalized_score = min(risk_score * 7, 100)
+            
             risky.append(RiskyFlow(
                 flow=flow,
-                risk_score=min(risk_score, 13),  # Cap at 13
+                risk_score=int(normalized_score),
                 reason="; ".join(reasons)
             ))
+    
+    # Sort by risk score descending
+    risky.sort(key=lambda x: x.risk_score, reverse=True)
     
     return risky
 

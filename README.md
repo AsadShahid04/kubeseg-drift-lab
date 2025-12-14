@@ -150,6 +150,7 @@ This is an **educational prototype** built to learn about Zero Trust segmentatio
 ### Frontend Views
 
 1. **Flow Visualization** 🆕
+
    - Interactive network graph showing all pod-to-pod communications
    - Color-coded nodes (by namespace and risk level)
    - Filter by namespace, risk level, and search
@@ -157,11 +158,13 @@ This is an **educational prototype** built to learn about Zero Trust segmentatio
    - Click nodes/edges for detailed information
 
 2. **Gaps & Suggestions**
+
    - View risky flows (cross-namespace to sensitive resources)
    - View unprotected flows (allowed but not covered by policies)
    - Copy suggested NetworkPolicy YAML snippets
 
 3. **Policy Drift**
+
    - Per-namespace summary cards
    - Missing policies (intent exists, no policy)
    - Over-permissive policies (policy allows more than intent)

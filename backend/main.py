@@ -27,6 +27,7 @@ from analysis.drift import (
     find_over_permissive_policies,
     calculate_namespace_summary,
 )
+from analysis.pr_snippets import generate_pr_snippet_for_suggested_policy, bundle_top_fixes
 from ai.nl_intent import NLIntentConverter, intent_to_network_policy, policy_to_yaml
 
 # Initialize FastAPI app
@@ -203,8 +204,90 @@ async def get_gaps():
     unprotected_flows = find_unprotected_flows(flows, policies)
     suggested_policies = suggest_policies(unprotected_flows)
     
+    # Add risk levels and AI summaries
+    from ai.nl_intent import NLIntentConverter
+    import os
+    
+    enhanced_risky_flows = []
+    try:
+        converter = NLIntentConverter(model="gpt-3.5-turbo")
+        for risky_flow in risky_flows[:10]:  # Limit to top 10 for API efficiency
+            # Determine risk level
+            if risky_flow.risk_score >= 80:
+                risk_level = "critical"
+            elif risky_flow.risk_score >= 60:
+                risk_level = "high"
+            elif risky_flow.risk_score >= 40:
+                risk_level = "medium"
+            else:
+                risk_level = "low"
+            
+            # Generate AI summary
+            try:
+                prompt = f"""Generate a concise 1-sentence security risk summary for this network flow:
+Source: {risky_flow.flow.src_ns}/{risky_flow.flow.src_pod}
+Destination: {risky_flow.flow.dst_ns}/{risky_flow.flow.dst_pod}
+Port: {risky_flow.flow.port}/{risky_flow.flow.protocol}
+Risk Factors: {risky_flow.reason}
+Risk Score: {risky_flow.risk_score}/100
+
+Provide a professional, concise summary suitable for security analysts."""
+                
+                response = converter.client.chat.completions.create(
+                    model=converter.model,
+                    messages=[
+                        {"role": "system", "content": "You are a security analyst providing concise risk summaries."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=100,
+                    temperature=0.7
+                )
+                summary = response.choices[0].message.content.strip()
+            except:
+                summary = f"Security risk detected: {risky_flow.reason}"
+            
+            enhanced_risky_flows.append({
+                **risky_flow.model_dump(),
+                "risk_level": risk_level,
+                "summary": summary
+            })
+        
+        # Add remaining flows without AI summaries
+        for risky_flow in risky_flows[10:]:
+            if risky_flow.risk_score >= 80:
+                risk_level = "critical"
+            elif risky_flow.risk_score >= 60:
+                risk_level = "high"
+            elif risky_flow.risk_score >= 40:
+                risk_level = "medium"
+            else:
+                risk_level = "low"
+            
+            enhanced_risky_flows.append({
+                **risky_flow.model_dump(),
+                "risk_level": risk_level,
+                "summary": f"Security risk: {risky_flow.reason}"
+            })
+    except Exception as e:
+        # Fallback if OpenAI fails
+        for risky_flow in risky_flows:
+            if risky_flow.risk_score >= 80:
+                risk_level = "critical"
+            elif risky_flow.risk_score >= 60:
+                risk_level = "high"
+            elif risky_flow.risk_score >= 40:
+                risk_level = "medium"
+            else:
+                risk_level = "low"
+            
+            enhanced_risky_flows.append({
+                **risky_flow.model_dump(),
+                "risk_level": risk_level,
+                "summary": f"Security risk: {risky_flow.reason}"
+            })
+    
     return {
-        "risky_flows": [item.model_dump() for item in risky_flows],
+        "risky_flows": enhanced_risky_flows,
         "unprotected_flows": [item.model_dump() for item in unprotected_flows],
         "suggested_policies": [item.model_dump() for item in suggested_policies]
     }
@@ -345,4 +428,141 @@ async def convert_nl_to_intent(request: dict):
         }
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.get("/api/pr-snippets/{policy_index}")
+async def get_pr_snippet(policy_index: int):
+    """Get PR snippet for a suggested policy by index."""
+    try:
+        flows = load_flows()
+        policies = load_policies()
+        
+        from analysis.gaps import find_unprotected_flows, suggest_policies
+        unprotected = find_unprotected_flows(flows, policies)
+        suggested = suggest_policies(unprotected)
+        
+        if policy_index < 0 or policy_index >= len(suggested):
+            return {"error": "Invalid policy index"}
+        
+        snippet = generate_pr_snippet_for_suggested_policy(suggested[policy_index])
+        return snippet.model_dump()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/bundled-fixes")
+async def get_bundled_fixes(top_n: int = 3):
+    """Get bundled YAML for top N suggested policies."""
+    try:
+        flows = load_flows()
+        policies = load_policies()
+        
+        from analysis.gaps import find_unprotected_flows, suggest_policies
+        unprotected = find_unprotected_flows(flows, policies)
+        suggested = suggest_policies(unprotected)
+        
+        bundled = bundle_top_fixes(suggested, top_n)
+        return bundled.model_dump()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/api/namespace-brief")
+async def get_namespace_brief(request: dict):
+    """
+    Generate AI brief for a namespace.
+    
+    Request body:
+    {
+        "namespace": "prod"
+    }
+    """
+    try:
+        namespace = request.get("namespace", "")
+        if not namespace:
+            return {"error": "Namespace is required"}
+        
+        flows = load_flows()
+        policies = load_policies()
+        intents = load_intents()
+        
+        from analysis.gaps import find_risky_flows, find_unprotected_flows
+        from analysis.drift import find_missing_policies_for_intent, find_over_permissive_policies
+        
+        # Collect namespace data
+        ns_flows = [f for f in flows if f.src_ns == namespace or f.dst_ns == namespace]
+        ns_policies = [p for p in policies if p.namespace == namespace]
+        risky_flows = find_risky_flows(ns_flows)
+        unprotected = find_unprotected_flows(ns_flows, ns_policies)
+        missing = find_missing_policies_for_intent(intents, ns_policies)
+        over_permissive = find_over_permissive_policies(intents, ns_policies)
+        
+        # Count services (unique apps)
+        services = set()
+        for flow in ns_flows:
+            services.add(flow.src_labels.get("app", "unknown"))
+            services.add(flow.dst_labels.get("app", "unknown"))
+        
+        # Build summary
+        summary = {
+            "namespace": namespace,
+            "service_count": len(services),
+            "services": list(services)[:5],  # Top 5
+            "policy_count": len(ns_policies),
+            "risky_flows_count": len(risky_flows),
+            "unprotected_flows_count": len(unprotected),
+            "missing_policies_count": len([m for m in missing if m.namespace == namespace]),
+            "over_permissive_count": len([o for o in over_permissive if o.namespace == namespace]),
+            "top_risky_flows": [
+                {
+                    "src": f"{rf.flow.src_ns}/{rf.flow.src_pod}",
+                    "dst": f"{rf.flow.dst_ns}/{rf.flow.dst_pod}",
+                    "risk_score": rf.risk_score
+                }
+                for rf in risky_flows[:3]
+            ]
+        }
+        
+        # Generate AI brief using OpenAI
+        try:
+            converter = NLIntentConverter(model="gpt-3.5-turbo")
+            prompt = f"""Generate a concise SOC-style security brief for Kubernetes namespace '{namespace}'.
+            
+Summary data:
+- {summary['service_count']} services: {', '.join(summary['services'])}
+- {summary['policy_count']} NetworkPolicies
+- {summary['risky_flows_count']} risky flows detected
+- {summary['unprotected_flows_count']} unprotected flows
+- {summary['missing_policies_count']} missing policies
+- {summary['over_permissive_count']} over-permissive policies
+
+Top risky flows:
+{chr(10).join(f"- {rf['src']} → {rf['dst']} (risk: {rf['risk_score']})" for rf in summary['top_risky_flows'])}
+
+Write a 2-3 sentence brief in SOC analyst style, highlighting key risks and notable drift items."""
+            
+            response = converter.client.chat.completions.create(
+                model=converter.model,
+                messages=[
+                    {"role": "system", "content": "You are a SOC security analyst writing brief security summaries for Kubernetes namespaces."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=200,
+                temperature=0.7
+            )
+            
+            brief = response.choices[0].message.content.strip()
+        except Exception as e:
+            # Fallback if OpenAI fails
+            brief = f"{namespace} hosts {summary['service_count']} services, has {summary['policy_count']} policies, and {summary['risky_flows_count']} risky flows detected."
+        
+        return {
+            "namespace": namespace,
+            "summary": summary,
+            "brief": brief
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 

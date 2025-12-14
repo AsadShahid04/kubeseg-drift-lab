@@ -31,6 +31,8 @@ build/
 # Environment
 .env
 .env.local
+.env.production
+.env.production.local
 
 # OS
 .DS_Store
