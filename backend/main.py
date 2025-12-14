@@ -175,7 +175,8 @@ async def root():
         "endpoints": {
             "/api/debug": "Raw data (flows, policies, intents)",
             "/api/gaps": "Gap analysis (risky flows, unprotected flows, suggestions)",
-            "/api/drift": "Drift detection (missing policies, over-permissive policies)"
+            "/api/drift": "Drift detection (missing policies, over-permissive policies)",
+            "/api/namespace-brief": "Generate AI brief for a namespace (POST)"
         }
     }
 
