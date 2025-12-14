@@ -33,10 +33,10 @@ export default function LoadingToast({ show, onClose }: LoadingToastProps) {
               Backend Service Starting Up
             </h4>
             <p className="text-xs text-blue-100 leading-relaxed">
-              We're using the free tier of our hosting provider, which spins down
-              backend services after 15 minutes of inactivity. If loading takes
-              longer than expected, please refresh the page and try again in a
-              minute or two.
+              We're using the free tier of our hosting provider, which spins
+              down backend services after 15 minutes of inactivity. If loading
+              takes longer than expected, please refresh the page and try again
+              in a minute or two.
             </p>
           </div>
           <button

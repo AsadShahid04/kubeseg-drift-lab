@@ -449,18 +449,6 @@ export default function CaseStudies() {
           </div>
         </div>
       </section>
-
-      {/* Call to Action */}
-      <section className="bg-blue-600 rounded-lg p-6 text-white">
-        <h3 className="text-xl font-semibold mb-3">
-          Explore the Full Case Study
-        </h3>
-        <p className="text-sm mb-4 opacity-90">
-          For a comprehensive analysis including detailed breach timelines,
-          quantitative ROI calculations, compliance implications, and technical
-          deep dives, refer to the complete case study document.
-        </p>
-      </section>
     </div>
   );
 }
