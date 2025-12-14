@@ -932,25 +932,6 @@ export default function FlowVisualization() {
         </button>
       )}
 
-      {/* Fullscreen Controls Overlay */}
-      {isFullscreen && (
-        <div className="fixed top-4 left-4 z-50 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium"
-            >
-              {showDetails ? "Hide Details" : "Show Details"}
-            </button>
-            <button
-              onClick={() => setIsFullscreen(false)}
-              className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium"
-            >
-              Exit Fullscreen
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
