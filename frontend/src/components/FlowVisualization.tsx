@@ -27,8 +27,8 @@ export default function FlowVisualization() {
   const networkInstanceRef = useRef<Network | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
+  const [_selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [_selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [filterNamespace, setFilterNamespace] = useState<string>("all");
   const [filterRisk, setFilterRisk] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -49,7 +49,7 @@ export default function FlowVisualization() {
 
   const getNodeColor = useCallback(
     (
-      labels: Record<string, string>,
+      _labels: Record<string, string>,
       namespace: string,
       isRisky: boolean
     ): any => {
@@ -89,19 +89,13 @@ export default function FlowVisualization() {
     []
   );
 
-  const getEdgeColor = useCallback((flow: Flow): string => {
-    // Illumio-style edge colors
-    if (flow.verdict === "deny") {
-      return "#dc2626"; // red for denied
-    }
-    if (flow.is_risky) {
-      return "#ea580c"; // orange for risky
-    }
-    if (flow.is_unprotected) {
-      return "#eab308"; // yellow for unprotected
-    }
-    return "#22c55e"; // green for safe
-  }, []);
+  // Edge color function (currently unused but kept for future use)
+  // const getEdgeColor = useCallback((flow: Flow): string => {
+  //   if (flow.verdict === "deny") return "#dc2626";
+  //   if (flow.is_risky) return "#ea580c";
+  //   if (flow.is_unprotected) return "#eab308";
+  //   return "#22c55e";
+  // }, []);
 
   const buildNetwork = useCallback(
     (flows: Flow[]) => {

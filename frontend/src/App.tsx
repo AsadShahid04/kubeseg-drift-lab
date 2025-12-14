@@ -93,13 +93,17 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorBoundary>
           {activeTab === "welcome" ? (
-            <WelcomeView onNavigate={setActiveTab} />
+            <WelcomeView
+              onNavigate={(tab) => setActiveTab(tab as typeof activeTab)}
+            />
           ) : activeTab === "gaps" ? (
             <GapsView />
           ) : activeTab === "drift" ? (
             <DriftView />
           ) : activeTab === "scenarios" ? (
-            <GuidedScenarios onNavigate={setActiveTab} />
+            <GuidedScenarios
+              onNavigate={(tab) => setActiveTab(tab as typeof activeTab)}
+            />
           ) : activeTab === "case-studies" ? (
             <CaseStudies />
           ) : (

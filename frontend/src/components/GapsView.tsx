@@ -19,8 +19,10 @@ interface BundledFixes {
 interface Flow {
   src_ns: string;
   src_pod: string;
+  src_labels: Record<string, string>;
   dst_ns: string;
   dst_pod: string;
+  dst_labels: Record<string, string>;
   port: number;
   protocol: string;
   verdict: string;
@@ -117,11 +119,11 @@ export default function GapsView() {
   const getRiskLevelBadge = (level?: string, score?: number) => {
     const effectiveLevel =
       level ||
-      (score >= 80
+      (score !== undefined && score >= 80
         ? "critical"
-        : score >= 60
+        : score !== undefined && score >= 60
         ? "high"
-        : score >= 40
+        : score !== undefined && score >= 40
         ? "medium"
         : "low");
     const colors = {
