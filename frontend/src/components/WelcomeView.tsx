@@ -5,7 +5,6 @@ interface WelcomeViewProps {
 }
 
 export default function WelcomeView({ onNavigate }: WelcomeViewProps) {
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
@@ -15,10 +14,6 @@ export default function WelcomeView({ onNavigate }: WelcomeViewProps) {
 
   const handleWelcomeClose = () => {
     setShowWelcomeModal(false);
-  };
-
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
   };
 
   return (
